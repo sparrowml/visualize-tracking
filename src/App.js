@@ -23,10 +23,12 @@ const drawBoxes = (tracking, frameIndex) => {
 }
 
 function App() {
+  const [videoSrc, setVideoSrc] = useState(null);
+  const [trackingSrc, setTrackingSrc] = useState(null);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
-  const [frameIndex, setFrameIndex] = useState(0);
-  const [tracking, setTracking] = useState({ fps: 0, tracklets: [] });
+  const [frameIndex, setFrameIndex] = useState(undefined);
+  const [tracking, setTracking] = useState({ fps: undefined, tracklets: [] });
   const videoElement = useRef(null);
   const requestRef = useRef();
 
@@ -37,27 +39,34 @@ function App() {
   }
 
   const updateFrameIndex = useCallback(() => {
-    if (!videoElement.current) return;
+    if (!tracking.fps) return;
     setFrameIndex(Math.round(videoElement.current.currentTime * tracking.fps));
     requestRef.current = requestAnimationFrame(updateFrameIndex);
-  }, [videoElement, tracking.fps]);
+  }, [setFrameIndex, tracking.fps]);
 
   useEffect(() => {
-    fetch('/out.json')
-      .then(response => response.json())
-      .then(setTracking);
-  }, [setTracking]);
+    if (trackingSrc) {
+      fetch(trackingSrc)
+        .then(response => response.json())
+        .then(setTracking);
+    }
+  }, [trackingSrc, setTracking]);
 
   useEffect(() => {
     requestRef.current = requestAnimationFrame(updateFrameIndex);
-    return () => cancelAnimationFrame(requestRef.current);
   }, [updateFrameIndex]);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setVideoSrc(urlParams.get('video') || '/traffic.mp4');
+    setTrackingSrc(urlParams.get('tracking') || '/out.json');
+  }, [])
 
   return (
     <div className="container">
       <video
         ref={videoElement}
-        src="/traffic.mp4"
+        src={videoSrc}
         onLoadedMetadata={onLoad}
         controls
         muted
@@ -71,11 +80,11 @@ function App() {
       <form>
         <label>
           Video URL:
-          <input className="text" type="text" name="video" />
+          <input className="text" type="text" name="video" defaultValue={videoSrc} />
         </label>
         <label>
           Tracking URL:
-          <input className="text" type="text" name="tracking" />
+          <input className="text" type="text" name="tracking" defaultValue={trackingSrc} />
         </label>        
         <input type="submit" value="Visualize" />
       </form>
