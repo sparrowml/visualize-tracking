@@ -3,29 +3,13 @@ import * as d3 from 'd3-scale-chromatic';
 
 import './App.css';
 
-const drawBoxes = (tracking, frameIndex) => {
-  if (frameIndex === undefined || tracking.tracklets.length === 0) return;
-  return tracking.tracklets
-    .map((tracklet, i) => {
-      if (tracklet.start <= frameIndex && frameIndex < tracklet.start + tracklet.boxes.length) {
-        const [x1, y1, x2, y2] = tracklet.boxes[frameIndex - tracklet.start];
-        return <rect
-          key={i}
-          x={x1}
-          y={y1}
-          width={x2 - x1}
-          height={y2 - y1}
-          stroke={d3.schemeCategory10[i % 10]}
-        />        
-      }
-      return null;
-    });
-}
+// Hardcode video player width
+// Then compute height to match video's aspect ratio
+const WIDTH = 800;
 
 function App() {
   const [videoSrc, setVideoSrc] = useState(null);
   const [trackingSrc, setTrackingSrc] = useState(null);
-  const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [frameIndex, setFrameIndex] = useState(undefined);
   const [tracking, setTracking] = useState({ fps: undefined, tracklets: [] });
@@ -34,8 +18,26 @@ function App() {
 
   const onLoad = event => {
     const { videoWidth, videoHeight } = event.target;
-    setWidth(videoWidth);
-    setHeight(videoHeight);
+    setHeight(WIDTH * videoHeight / videoWidth);
+  }
+
+  const drawBoxes = () => {
+    if (frameIndex === undefined || tracking.tracklets.length === 0) return;
+    return tracking.tracklets
+      .map((tracklet, i) => {
+        if (tracklet.start <= frameIndex && frameIndex < tracklet.start + tracklet.boxes.length) {
+          const [x1, y1, x2, y2] = tracklet.boxes[frameIndex - tracklet.start];
+          return <rect
+            key={i}
+            x={x1 * WIDTH}
+            y={y1 * height}
+            width={(x2 - x1) * WIDTH}
+            height={(y2 - y1) * height}
+            stroke={d3.schemeCategory10[i % 10]}
+          />
+        }
+        return null;
+      });
   }
 
   const updateFrameIndex = useCallback(() => {
@@ -67,12 +69,14 @@ function App() {
       <video
         ref={videoElement}
         src={videoSrc}
+        width={WIDTH}
+        height={height}
         onLoadedMetadata={onLoad}
         controls
         muted
       />
       <svg
-        width={width}
+        width={WIDTH}
         height={height}
       >
         {drawBoxes(tracking, frameIndex)}
