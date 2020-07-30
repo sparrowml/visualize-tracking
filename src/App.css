@@ -18,3 +18,13 @@ rect {
   stroke-opacity: 0.9;
   fill-opacity: 0;
 }
+
+form {
+  margin-top: 10px;
+}
+
+input.text {
+  margin-left: 10px;
+  margin-right: 10px;
+  width: 200px;
+}
