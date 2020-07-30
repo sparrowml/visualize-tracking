@@ -3,14 +3,12 @@ import * as d3 from 'd3-scale-chromatic';
 
 import './App.css';
 
-const drawBoxes = (data, frameIndex) => {
-  if (frameIndex === undefined || data.tracking.length === 0) return;
-  const tracklets = data.tracking[frameIndex];
-  if (!tracklets) return;
-  return tracklets
-    .map((box, i) => {
-      const [x1, y1, x2, y2] = box;
-      if (box[0]) {
+const drawBoxes = (tracking, frameIndex) => {
+  if (frameIndex === undefined || tracking.tracklets.length === 0) return;
+  return tracking.tracklets
+    .map((tracklet, i) => {
+      if (tracklet.start <= frameIndex && frameIndex < tracklet.start + tracklet.boxes.length) {
+        const [x1, y1, x2, y2] = tracklet.boxes[frameIndex - tracklet.start];
         return <rect
           key={i}
           x={x1}
@@ -18,7 +16,7 @@ const drawBoxes = (data, frameIndex) => {
           width={x2 - x1}
           height={y2 - y1}
           stroke={d3.schemeCategory10[i % 10]}
-        />
+        />        
       }
       return null;
     });
@@ -28,7 +26,7 @@ function App() {
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
   const [frameIndex, setFrameIndex] = useState(0);
-  const [tracking, setTracking] = useState({ fps: 0, tracking: [] });
+  const [tracking, setTracking] = useState({ fps: 0, tracklets: [] });
   const videoElement = useRef(null);
   const requestRef = useRef();
 
