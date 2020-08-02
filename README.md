@@ -1,3 +1,9 @@
+# Visualize Object Tracking
+
+Render boxes on video to validate an object tracking algorithm. Boxes from the same tracklet are the same color.
+
+The app is hosted [here](https://silly-noyce-82730b.netlify.app/).
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
